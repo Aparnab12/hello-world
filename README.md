@@ -3,4 +3,4 @@ Just another repository
 
 Hello all!!
 
-Lets start learnng, off to a new start!
+Lets start learning, off to a new start!
