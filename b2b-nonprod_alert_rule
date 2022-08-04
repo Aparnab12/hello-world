@@ -51,7 +51,7 @@
         description: 'Warning: Consumer Application status for {{ $labels.job }} in {{ $labels.env }} seems to be down for 2 minutes.'
         summary: 'Status of {{ $labels.job }} in {{ $labels.env }} seems to be down.'
     - alert: b2b-inventoryupdates-ish-AppDown
-      expr: (b2b-inventoryupdates-ish_application_health{job="b2b-inventoryupdates-ish", env="stg"}) == 0
+      expr: (b2b_inventoryupdates_ish_application_health{job="b2b-inventoryupdates-ish", env="stg"}) == 0
       for: 5m
       labels:
         owner: retail-b2b
