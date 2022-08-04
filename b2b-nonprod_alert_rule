@@ -41,7 +41,7 @@
         description: 'Critical: All Pods for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 5 minutes'
     - alert: b2b-inventoryupdates-ish-AppDown
-      expr: (b2b-inventoryupdates-ish_application_health{job="b2b-inventoryupdates-ish", env="stg"}) == 0
+      expr: (b2b_inventoryupdates_ish_application_health{job="b2b-inventoryupdates-ish", env="stg"}) == 0
       for: 2m
       labels:
         owner: retail-b2b
