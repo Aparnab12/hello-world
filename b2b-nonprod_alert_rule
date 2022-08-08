@@ -79,7 +79,7 @@
       annotations:
         identifier: '{{ $labels.env }} / {{ $labels.job }} / {{ $labels.instance }}'
         description: 'Critical: Got Status `{{ $labels.status}}` with exception `{{ $labels.exception}}` for URL `{{ $labels.uri}}`. Count is `{{ $value }}`'
-        summary: '`{{ $labels.exception}}` in {{ $labels.env }} for `{{ $labels.uri}}`'        
+        summary: '`{{ $labels.exception}}` in {{ $labels.env }} for `{{ $labels.uri}}`'
     - alert: b2b-inventoryupdates-ish-CpuUsageAlert-Stg
       expr: (kube_metrics_server_pods_cpu{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg", env="nonprod"} / (1000000 * 1000)) > 1.4
       for: 5m
