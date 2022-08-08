@@ -1,7 +1,7 @@
 - name: b2b.inventoryupdates.ish.npd.rules
   rules:
     - alert: b2b-inventoryupdates-ish-PodDown-NonProd
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg"}) by (role, env, namespace, container)) < 3 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="nonprod", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="nonprod"}) by (env, namespace, container)) < 3
       for: 2m
       labels:
         owner: retail-b2b
@@ -11,7 +11,7 @@
         description: 'Warning: One or more pod(s) for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 2 minutes'
     - alert: b2b-inventoryupdates-ish-PodDown-NonProd
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg"}) by (role, env, namespace, container)) < 3 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="nonprod", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="nonprod"}) by (env, namespace, container)) < 3
       for: 5m
       labels:
         owner: retail-b2b
@@ -21,7 +21,7 @@
         description: 'Critical: One or more pod(s) for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 5 minutes'
     - alert: b2b-inventoryupdates-ish-AllPodDown-NonProd
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg"}) by (role, env, namespace, container)) == 0 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="nonprod", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="nonprod"}) by (env, namespace, container)) == 0
       for: 2m
       labels:
         owner: retail-b2b
@@ -31,7 +31,7 @@
         description: 'Warning: All Pods for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 2 minutes'
     - alert: b2b-inventoryupdates-ish-AllPodDown-NonProd
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg"}) by (role, env, namespace, container)) == 0 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="nonprod", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="nonprod"}) by (env, namespace, container)) == 0
       for: 5m
       labels:
         owner: retail-b2b
@@ -60,8 +60,28 @@
         identifier: '{{ $labels.env}}/{{ $labels.role}}'
         description: 'Critical: Consumer Application status for {{ $labels.job }} in {{ $labels.env }} seems to be down for 5 minutes.'
         summary: 'Status of {{ $labels.job }} in {{ $labels.env }} seems to be down.'
+    - alert: b2b-inventoryupdates-ish-ServerHealth-Error-NonProd
+      expr: (rate(http_server_requests_seconds_count{job="b2b-inventoryupdates-ish",uri="/actuator/health",status=~"500|501|502|503|404", env=~"dev|qas|stg"}[10m])) > 0
+      for: 2m
+      labels:
+        owner: retail-rfidtransfers
+        severity: warning
+      annotations:
+        identifier: '{{ $labels.env }} / {{ $labels.job }} / {{ $labels.instance }}'
+        description: 'Warning: Got Status `{{ $labels.status}}` with exception `{{ $labels.exception}}` for URL `{{ $labels.uri}}`. Count is `{{ $value }}`'
+        summary: '`{{ $labels.exception}}` in {{ $labels.env }} for `{{ $labels.uri}}`'
+    - alert: b2b-inventoryupdates-ish-ServerHealth-Error-NonProd
+      expr: (rate(http_server_requests_seconds_sum{job="b2b-inventoryupdates-ish",uri="/actuator/health",status=~"500|501|502|503|404", env=~"dev|qas|stg"}[10m])) > 0
+      for: 5m
+      labels:
+        owner: retail-rfidtransfers
+        severity: critical
+      annotations:
+        identifier: '{{ $labels.env }} / {{ $labels.job }} / {{ $labels.instance }}'
+        description: 'Critical: Got Status `{{ $labels.status}}` with exception `{{ $labels.exception}}` for URL `{{ $labels.uri}}`. Count is `{{ $value }}`'
+        summary: '`{{ $labels.exception}}` in {{ $labels.env }} for `{{ $labels.uri}}`'        
     - alert: b2b-inventoryupdates-ish-CpuUsageAlert-Stg
-      expr: (kube_metrics_server_pods_cpu{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg"} / (1000000 * 1000)) > 1.4
+      expr: (kube_metrics_server_pods_cpu{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg", env="nonprod"} / (1000000 * 1000)) > 1.4
       for: 5m
       labels:
         owner: retail-b2b
@@ -71,7 +91,7 @@
         description: 'Warning: CPU Usage exceeds 70%. `{{ $labels.pod_namespace }}/{{ $labels.role }}/{{ $labels.instance }}`'
         summary: 'CPU usage is high: `{{ $labels.pod_namespace }}/{{ $labels.role }}/{{ $labels.instance }}`'
     - alert: b2b-inventoryupdates-ish-CpuUsageAlert-Stg
-      expr: (kube_metrics_server_pods_cpu{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg"} / (1000000 * 1000)) > 1.8
+      expr: (kube_metrics_server_pods_cpu{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg", env="nonprod"} / (1000000 * 1000)) > 1.8
       for: 10m
       labels:
         owner: retail-b2b
@@ -81,7 +101,7 @@
         description: 'Critical: CPU Usage exceeds 90%. `{{ $labels.pod_namespace }}/{{ $labels.role }}/{{ $labels.instance }}`'
         summary: 'CPU usage is very high: `{{ $labels.pod_namespace }}/{{ $labels.role }}/{{ $labels.instance }}`'
     - alert: b2b-inventoryupdates-ish-MemoryUsageAlert-Stg
-      expr: (avg(kube_metrics_server_pods_mem{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg"}) by (role, env, instance, pod_namespace, pod_container_name)) > (4.2 * 1024 * 1024 * 1024)
+      expr: (avg(kube_metrics_server_pods_mem{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg", env="nonprod"}) by (env, pod_namespace, pod_container_name)) > (4.2 * 1024 * 1024 * 1024)
       for: 5m
       labels:
         owner: retail-b2b
@@ -91,7 +111,7 @@
         description: 'warning: Memory Usage exceeds 70%. `{{ $labels.pod_namespace }}/{{$labels.pod_container_name}}/{{ $labels.role }}/{{ $labels.instance }}/{{ $labels.env }}`'
         summary: 'Memory usage is high: `{{ $labels.pod_namespace }}/{{$labels.pod_container_name}}/{{ $labels.role }}/{{ $labels.instance }}/{{ $labels.env }}`'
     - alert: b2b-inventoryupdates-ish-MemoryUsageAlert-Stg
-      expr: (avg(kube_metrics_server_pods_mem{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg"}) by (role, env, instance, pod_namespace, pod_container_name)) > (5.4 * 1024 * 1024 * 1024)
+      expr: (avg(kube_metrics_server_pods_mem{pod_container_name="b2b-inventoryupdates-ish", pod_namespace="stg", env="nonprod"}) by (env, pod_namespace, pod_container_name)) > (5.4 * 1024 * 1024 * 1024)
       for: 10m
       labels:
         owner: retail-b2b
@@ -124,7 +144,7 @@
 - name: b2b.inventoryupdates.ish.npd.drc.rules
   rules:
     - alert: b2b-inventoryupdates-ish-PodDown-NPD-DRC
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) < 3 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="npd-drc", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) < 3
       for: 2m
       labels:
         owner: retail-b2b
@@ -134,7 +154,7 @@
         description: 'Warning: One or more pod(s) for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 2 minutes'
     - alert: b2b-inventoryupdates-ish-PodDown-NPD-DRC
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) < 3 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="npd-drc", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) < 3
       for: 5m
       labels:
         owner: retail-b2b
@@ -144,7 +164,7 @@
         description: 'Critical: One or more pod(s) for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 5 minutes'
     - alert: b2b-inventoryupdates-ish-AllPodDown-NPD-DRC
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) == 0 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="npd-drc", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) == 0
       for: 2m
       labels:
         owner: retail-b2b
@@ -154,7 +174,7 @@
         description: 'Warning: All Pods for {{ $labels.container }} in {{ $labels.namespace }} seems to be down. Current pod count is {{ $value }}'
         summary: 'Host {{ $labels.container }} has not been reachable for 2 minutes'
     - alert: b2b-inventoryupdates-ish-AllPodDown-NPD-DRC
-      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) == 0 OR absent(kube_pod_container_info{container="b2b-inventoryupdates-ish", role="eks", env="npd-drc", namespace="stg"}) == 1
+      expr: (sum(kube_pod_container_info{container="b2b-inventoryupdates-ish", namespace="stg", env="npd-drc"}) by (role, env, namespace, container)) == 0
       for: 5m
       labels:
         owner: retail-b2b
